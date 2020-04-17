@@ -4,14 +4,14 @@ setup:
 
 install:
 	(\
-	. ~/.fx_rl_repo/bin/activate; \
+	source ~/.fx_rl_repo/bin/activate; \
 	pip install --upgrade pip; \
 	pip install -r requirements.txt; \
 	)
 
 test:
 	(\
-	. ~/.fx_rl_repo/bin/activate; \
+	source ~/.fx_rl_repo/bin/activate; \
 	python -m pytest -vv --cov=app tests/*.py; \
 	python -m pytest --nbval Demo_Notebook.ipynb; \
 	)
