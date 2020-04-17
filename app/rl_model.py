@@ -1,4 +1,3 @@
-import gym
 import yfinance as yf
 import os
 import sys
@@ -6,6 +5,8 @@ import datetime
 import logging
 import matplotlib.pyplot as plt
 import json
+import gym
+import gym_anytrading
 
 curr_pairs = {
 "EUR/USD":"EURUSD=X",
@@ -36,11 +37,11 @@ curr_pairs = {
 logger = logging.getLogger('rl_model')
 logging.basicConfig(level=logging.INFO)
 
-os.environ['ALPHAVANTAGE_API_KEY'] = '95O0QW8Y4UM8U9WA'
-os.environ['CURR_PAIR'] = "EUR/USD"
-os.environ['WINDOW_SIZE'] = "100"
-os.environ['PERIOD'] = "7d"
-os.environ['INTERVAL'] = "1m"
+# os.environ['ALPHAVANTAGE_API_KEY'] = '95O0QW8Y4UM8U9WA'
+# os.environ['CURR_PAIR'] = "EUR/USD"
+# os.environ['WINDOW_SIZE'] = "100"
+# os.environ['PERIOD'] = "7d"
+# os.environ['INTERVAL'] = "1m"
 
 #Periods are key = time that will go into yfinance call, value = amount of that will be set as default window_size
 periods = ["1d",
@@ -73,7 +74,7 @@ def main(curr_pair="EUR/USD", period="1y", interval="1h", window_size=1, unit_si
 
     curr = yf.Ticker(curr_pairs[curr_pair.upper()])
     # This will be a configurable call in custom function
-    df = curr.history(period=period, interval=interval)
+    df = curr.history(period=period, interval=interval, )
     df = df[["Open", "High", "Low", "Close"]]
     # Data cleaning, not totally necessary.
     df.index.rename('Time', inplace=True)
@@ -85,7 +86,7 @@ def main(curr_pair="EUR/USD", period="1y", interval="1h", window_size=1, unit_si
     logger.info("\nData end Time: {}".format(str(max(df.index))))
 
     env = gym.make('forex-v0', df=df, window_size=window_size, frame_bound=(window_size, df.shape[0]), unit_side=unit_side)
-    observation = env.reset()
+    env.reset()
     i = 0
     while True:
         action = env.action_space.sample()
