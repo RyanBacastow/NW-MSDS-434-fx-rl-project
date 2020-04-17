@@ -1,4 +1,4 @@
-from myrepolib import repomod
+import rl_model
 
 
 def test_func():

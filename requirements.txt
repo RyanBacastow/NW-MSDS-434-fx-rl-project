@@ -7,3 +7,6 @@ nbval
 click
 flask
 requests
+gym
+gym_anytrading
+yfinance
