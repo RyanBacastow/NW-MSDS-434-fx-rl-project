@@ -1,12 +1,9 @@
 import gym
-import flask
 import yfinance as yf
-import pandas as pd
 import os
 import sys
 import datetime
 import logging
-from gym_anytrading.envs import ForexEnv, Actions, Positions
 import matplotlib.pyplot as plt
 import json
 
@@ -16,7 +13,6 @@ curr_pairs = {
 "GBP/USD":"GBPUSD=X",
 "AUD/USD":"AUDUSD=X",
 "NZD/USD":"NZDUSD=X",
-"EUR/JPY":"EURJPY=X",
 "GBP/JPY":"GBPJPY=X",
 "EUR/GBP":"EURGBP=X",
 "EUR/CAD":"EURCAD=X",
@@ -61,12 +57,13 @@ periods = ["1d",
            ]
 
 
-def main(curr_pair=os.environ['CURR_PAIR'], period=os.environ['PERIOD'], interval=os.environ['INTERVAL'], window_size=int(os.environ['WINDOW_SIZE'])):
+def main(curr_pair="EUR/USD", period="1y", interval="1h", window_size=1, unit_side='left'):
     """
     :param curr_pair: str: Choose from the list of valid trading pairs seen in curr_pairs dict object. Not case sensitive.
     :param period: str: Valid period strings user can choose from are in the period object.
     :param interval: str: Valid pairing of interval given period. Max period for 1 minute interval is 7d.
     :param window_size: str: amount of data that should be considered for making decisions.
+    :param unit_side: str: which side of the pair should be the one denominating the results.
     :return: info: dict: dictionary with returns and model information.
     """
     logger.info("curr_pair: {}".format(curr_pair))
@@ -87,7 +84,7 @@ def main(curr_pair=os.environ['CURR_PAIR'], period=os.environ['PERIOD'], interva
     logger.info("\nData start Time: {}".format(str(min(df.index))))
     logger.info("\nData end Time: {}".format(str(max(df.index))))
 
-    env = gym.make('forex-v0', df=df, window_size=window_size, frame_bound=(window_size, df.shape[0]))
+    env = gym.make('forex-v0', df=df, window_size=window_size, frame_bound=(window_size, df.shape[0]), unit_side=unit_side)
     observation = env.reset()
     i = 0
     while True:
@@ -110,7 +107,7 @@ def main(curr_pair=os.environ['CURR_PAIR'], period=os.environ['PERIOD'], interva
 
 if __name__ == '__main__':
     if len(sys.argv) >= 2:
-        main(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
+        main(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])
     else:
         print("Running model with default settings.")
         main()
