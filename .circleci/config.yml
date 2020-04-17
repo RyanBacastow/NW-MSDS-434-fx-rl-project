@@ -12,7 +12,7 @@ jobs:
       - python/install-deps
       - python/save-cache
       - run:
-          command: make all
+          command: python -m pytest -vv --cov=app tests/*.py;
           name: Test
 
 workflows:
