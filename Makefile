@@ -17,6 +17,8 @@ test:
 	)
 
 lint:
-	pylint --disable=R,C app
+	(\
+	pylint --disable=R,C app; \
+	)
 
 all: install lint test
