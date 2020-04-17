@@ -1,7 +1,6 @@
 setup:
 	python3 -m venv ~/.fx_rl_repo
 
-
 install:
 	(\
 	. ~/.fx_rl_repo/bin/activate; \
@@ -19,4 +18,4 @@ test:
 lint:
 	pylint --disable=R,C app
 
-all: install lint test
+all: setup install lint test
