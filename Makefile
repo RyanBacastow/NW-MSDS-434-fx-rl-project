@@ -15,7 +15,9 @@ test:
 	)
 
 lint:
-	export PATH=$HOME/.local/bin:$PATH
-	pylint --disable=R,C app
+	(\
+	export PATH=$PATH:/home/circleci/.local/lib/python3.8/bin/; \
+	pylint --disable=R,C app; \
+	)
 
 all: setup install lint test
