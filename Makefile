@@ -16,6 +16,8 @@ test:
 	)
 
 lint:
+	pip3 show -f pylint
+	pip3 install pylint
 	pylint --disable=R,C app
 
 all: setup install lint test
