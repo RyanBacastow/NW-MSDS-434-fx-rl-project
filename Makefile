@@ -4,8 +4,7 @@ setup:
 install:
 	(\
 	. ~/.fx_rl_repo/bin/activate; \
-	pip install --upgrade pip; \
-	pip install -r requirements.txt; \
+	pip install --upgrade -q pip && pip install -r requirements.txt -q --progress-bar off; \
 	)
 
 test:
@@ -16,8 +15,7 @@ test:
 	)
 
 lint:
-	pip3 show -f pylint
-	pip3 install pylint
+	export PATH=$HOME/.local/bin:$PATH
 	pylint --disable=R,C app
 
 all: setup install lint test
