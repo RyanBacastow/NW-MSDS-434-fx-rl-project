@@ -16,7 +16,7 @@ test:
 
 lint:
 	(\
-	export PATH=$PATH:/home/circleci/.local/lib/python3.8/bin/; \
+	export PATH=$$HOME/.local/bin:$$PATH;\
 	pylint --disable=R,C app; \
 	)
 
