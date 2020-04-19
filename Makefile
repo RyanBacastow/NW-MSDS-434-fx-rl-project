@@ -9,6 +9,7 @@ install:
 
 lint:
 	(\
+	. ~/.fx_rl_repo/bin/activate; \
 	export PATH=$$HOME/.local/bin:$$PATH;\
 	pylint --disable=R,C app; \
 	)
@@ -19,4 +20,4 @@ test:
 	python -m pytest -vv --cov=app tests/*.py; \
 	)
 
-all: setup install test
+all: setup install lint test
