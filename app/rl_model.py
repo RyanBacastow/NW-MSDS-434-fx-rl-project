@@ -1,5 +1,4 @@
 import yfinance as yf
-import os
 import sys
 import datetime
 import logging
@@ -37,12 +36,6 @@ curr_pairs = {
 logger = logging.getLogger('rl_model')
 logging.basicConfig(level=logging.INFO)
 
-# os.environ['ALPHAVANTAGE_API_KEY'] = '95O0QW8Y4UM8U9WA'
-# os.environ['CURR_PAIR'] = "EUR/USD"
-# os.environ['WINDOW_SIZE'] = "100"
-# os.environ['PERIOD'] = "7d"
-# os.environ['INTERVAL'] = "1m"
-
 #Periods are key = time that will go into yfinance call, value = amount of that will be set as default window_size
 periods = ["1d",
            "5d",
@@ -57,7 +50,6 @@ periods = ["1d",
            "max"
            ]
 
-
 def main(curr_pair="EUR/USD", period="1y", interval="1h", window_size=1, unit_side='left'):
     """
     :param curr_pair: str: Choose from the list of valid trading pairs seen in curr_pairs dict object. Not case sensitive.
@@ -67,10 +59,10 @@ def main(curr_pair="EUR/USD", period="1y", interval="1h", window_size=1, unit_si
     :param unit_side: str: which side of the pair should be the one denominating the results.
     :return: info: dict: dictionary with returns and model information.
     """
-    logger.info("curr_pair: {}".format(curr_pair))
-    logger.info("period: {}".format(period))
-    logger.info("interval: {}".format(interval))
-    logger.info("window_size: {}".format(window_size))
+    logger.info("curr_pair: %s", curr_pair)
+    logger.info("period: %s", period)
+    logger.info("interval: %s", interval)
+    logger.info("window_size: %s", window_size)
 
     curr = yf.Ticker(curr_pairs[curr_pair.upper()])
     # This will be a configurable call in custom function
@@ -82,8 +74,8 @@ def main(curr_pair="EUR/USD", period="1y", interval="1h", window_size=1, unit_si
     df['Time'] = df['Time'].dt.tz_localize(None)
     df.set_index('Time', inplace=True)
 
-    logger.info("\nData start Time: {}".format(str(min(df.index))))
-    logger.info("\nData end Time: {}".format(str(max(df.index))))
+    logger.info("\nData start Time: %s", str(min(df.index)))
+    logger.info("\nData end Time: %s", str(max(df.index)))
 
     env = gym.make('forex-v0', df=df, window_size=window_size, frame_bound=(window_size, df.shape[0]), unit_side=unit_side)
     env.reset()
@@ -92,10 +84,10 @@ def main(curr_pair="EUR/USD", period="1y", interval="1h", window_size=1, unit_si
         action = env.action_space.sample()
         observation, reward, done, info = env.step(action)
         if i % window_size == 0:
-            logger.info("Model info at end of observation {}: {}".format(str(i), json.dumps(info)))
+            logger.info("Model info at end of observation %s: %s", str(i), json.dumps(info))
         i += 1
         if done:
-            logger.info("Final model info: {}".format(json.dumps(info)))
+            logger.info("Final model info: %s", json.dumps(info))
             break
 
     plt.cla()
