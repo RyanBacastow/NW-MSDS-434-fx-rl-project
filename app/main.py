@@ -13,35 +13,137 @@
 # limitations under the License.
 
 # [START gae_python37_app]
-from flask import Flask, jsonify, request
-from google.cloud import storage
+from flask import Flask, jsonify, request, render_template, url_for
+# from google.cloud import storage
 import pickle
 import os
 import numpy as np
+import yfinance as yf
+import datetime
+import logging
+import matplotlib.pyplot as plt
+import json
+import gym
+import gym_anytrading
+
+app = Flask(__name__,
+            static_folder='./static',
+            template_folder="./templates")
 
 # If `entrypoint` is not defined in app.yaml, App Engine will look for an app
 # called `app` in `main.py`.
-app = Flask(__name__)
 
-def list_buckets():
-    storage_client = storage.Client()
-    buckets = storage_client.list_buckets()
 
-    mylist = []
-    for bucket in buckets:
-        mylist.append(bucket.name)
+curr_pairs = {
+"EUR/USD":"EURUSD=X",
+"USD/JPY":"JPY=X",
+"GBP/USD":"GBPUSD=X",
+"AUD/USD":"AUDUSD=X",
+"NZD/USD":"NZDUSD=X",
+"GBP/JPY":"GBPJPY=X",
+"EUR/GBP":"EURGBP=X",
+"EUR/CAD":"EURCAD=X",
+"EUR/SEK":"EURSEK=X",
+"EUR/CHF":"EURCHF=X",
+"EUR/HUF":"EURHUF=X",
+"EUR/JPY":"EURJPY=X",
+"USD/CNY":"CNY=X",
+"USD/HKD":"HKD=X",
+"USD/SGD":"SGD=X",
+"USD/INR":"INR=X",
+"USD/MXN":"MXN=X",
+"USD/PHP":"PHP=X",
+"USD/IDR":"IDR=X",
+"USD/THB":"THB=X",
+"USD/MYR":"MYR=X",
+"USD/ZAR":"ZAR=X",
+"USD/RUB":"RUB=X"
+}
 
-    return mylist
+logger = logging.getLogger('rl_model')
+logging.basicConfig(level=logging.INFO)
+
+#Periods are key = time that will go into yfinance call, value = amount of that will be set as default window_size
+periods = ["1d",
+           "5d",
+           "1mo",
+           "3mo",
+           "6mo",
+           "1y",
+           "2y",
+           "5y",
+           "10y",
+           "ytd",
+           "max"
+           ]
+
+
+def main(curr_pair="EUR/USD", period="1y", interval="1h", window_size=1, unit_side='left'):
+    """
+    :param curr_pair: str: Choose from the list of valid trading pairs seen in curr_pairs dict object. Not case sensitive.
+    :param period: str: Valid period strings user can choose from are in the period object.
+    :param interval: str: Valid pairing of interval given period. Max period for 1 minute interval is 7d.
+    :param window_size: str: amount of data that should be considered for making decisions.
+    :param unit_side: str: which side of the pair should be the one denominating the results.
+    :return: info: dict: dictionary with returns and model information.
+    """
+    logger.info("curr_pair: %s", curr_pair)
+    logger.info("period: %s", period)
+    logger.info("interval: %s", interval)
+    logger.info("window_size: %s", window_size)
+
+    curr = yf.Ticker(curr_pairs[curr_pair.upper()])
+    # This will be a configurable call in custom function
+    df = curr.history(period=period, interval=interval, )
+    df = df[["Open", "High", "Low", "Close"]]
+    # Data cleaning, not totally necessary.
+    df.index.rename('Time', inplace=True)
+    df.reset_index(inplace=True)
+    df['Time'] = df['Time'].dt.tz_localize(None)
+    df.set_index('Time', inplace=True)
+
+    logger.info("\nData start Time: %s", str(min(df.index)))
+    logger.info("\nData end Time: %s", str(max(df.index)))
+
+    env = gym.make('forex-v0', df=df, window_size=window_size, frame_bound=(window_size, df.shape[0]), unit_side=unit_side)
+    env.reset()
+    i = 0
+    while True:
+        action = env.action_space.sample()
+        observation, reward, done, info = env.step(action)
+        if i % window_size == 0:
+            logger.info("Model info at end of observation %s: %s", str(i), json.dumps(info))
+        i += 1
+        if done:
+            logger.info("Final model info: %s", json.dumps(info))
+            break
+
+    plt.cla()
+    env.render_all()
+    plt.savefig("app/model_output/rl_model_output_{curr_pair}_{utc_datetime}.png".format(
+                curr_pair=curr_pair.split("/")[0] + "_" + curr_pair.split("/")[1],
+                utc_datetime=datetime.datetime.utcnow().strftime("%Y_%m_%d_%H_%M_%S")))
+    return info
 
 
 @app.route('/')
-def hello():
-    """Return a friendly HTTP greeting."""
-    out_str = "<br/><h1>Hello Cruel World!</h1>"
-    out_str += "<h3>Try out some of this APIs features:</h3>" \
-               "<h4>/name/value<br/>/params<br/>/getbuckets<br/>/dir<br/>/predict</h4>"
+def my_form():
+    return render_template('index.html')
 
-    return out_str
+
+@app.route('/', methods=['POST'])
+def my_form_post():
+    currency_pair = request.form["currency_pair"]
+    period = request.form["period"]
+    interval = request.form["interval"]
+    window_size = request.form["window_size"]
+
+    return f"Running on {currency_pair}, over {period} of data in {interval} intervals with {window_size} window_size"
+
+
+@app.route('/hello')
+def hello():
+    return render_template('hello.html')
 
 
 @app.route('/name/<value>')
@@ -55,37 +157,10 @@ def run_model():
     req_data = request.get_json()
     return req_data
 
-
-@app.route('/getbuckets')
-def get_buckets():
-    buck = list_buckets()
-    return jsonify(buck)
-
-
 @app.route('/dir')
 def dir():
     files = os.listdir()
-    return jsonify(files)  
-
-
-@app.route('/predict', methods=['POST'])
-def predict():
-
-    req_data = request.get_json()
-    new_data = np.array([req_data["sepal.length"], req_data["sepal.width"], req_data["petal.length"], req_data["petal.width"]]).astype(float)
-    
-    storage_client = storage.Client()
-    bucket = storage_client.bucket("2020sp-msds-434-dl-sec55-storage")
-    blob = bucket.blob("iris_model")
-
-    ## VERY WRONG WAY TO DO THIS
-    mod = pickle.loads(blob.download_as_string())
-    #val = mod.predict(np.array([[5.1, 3.5, 1.4, 0.2],[4.9, 3. , 1.4, 0.2],[4.7, 3.2, 1.3, 0.2],[4.6, 3.1, 1.5, 0.2],[5. , 3.6, 1.4, 0.2]]))
-    val = mod.predict(new_data.reshape(1,-1))
-
-    #return np.array_str(val)
-    return list(["Iris-Setosa\n","Iris-Versicolour\n","Iris-Virginica\n"])[val[0]]
-
+    return jsonify(files)
 
 
 if __name__ == '__main__':

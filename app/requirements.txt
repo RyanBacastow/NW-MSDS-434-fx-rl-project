@@ -2,3 +2,5 @@ Flask==1.1.2
 sklearn
 numpy
 google-cloud-storage
+gym_anything
+yfinance
