@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # [START gae_python37_app]
-from flask import Flask, jsonify, request, render_template, url_for
+from flask import Flask, jsonify, request, render_template, url_for, current_app
 # from google.cloud import storage
 import pickle
 import os
@@ -25,10 +25,17 @@ import matplotlib.pyplot as plt
 import json
 import gym
 import gym_anytrading
+from flask_logs import LogSetup
 
 app = Flask(__name__,
             static_folder='./static',
             template_folder="./templates")
+
+app.config["LOG_TYPE"] = os.environ.get("LOG_TYPE", "stream")
+app.config["LOG_LEVEL"] = os.environ.get("LOG_LEVEL", "INFO")
+
+logs = LogSetup()
+logs.init_app(app)
 
 # If `entrypoint` is not defined in app.yaml, App Engine will look for an app
 # called `app` in `main.py`.
@@ -60,9 +67,6 @@ curr_pairs = {
 "USD/RUB":"RUB=X"
 }
 
-logger = logging.getLogger('rl_model')
-logging.basicConfig(level=logging.INFO)
-
 #Periods are key = time that will go into yfinance call, value = amount of that will be set as default window_size
 periods = ["1d",
            "5d",
@@ -77,7 +81,6 @@ periods = ["1d",
            "max"
            ]
 
-
 def main(curr_pair="EUR/USD", period="1y", interval="1h", window_size=1, unit_side='left'):
     """
     :param curr_pair: str: Choose from the list of valid trading pairs seen in curr_pairs dict object. Not case sensitive.
@@ -87,43 +90,45 @@ def main(curr_pair="EUR/USD", period="1y", interval="1h", window_size=1, unit_si
     :param unit_side: str: which side of the pair should be the one denominating the results.
     :return: info: dict: dictionary with returns and model information.
     """
-    logger.info("curr_pair: %s", curr_pair)
-    logger.info("period: %s", period)
-    logger.info("interval: %s", interval)
-    logger.info("window_size: %s", window_size)
+
+    window_size = int(window_size)
+    current_app.logger.info(f"curr_pair: {curr_pair}")
+    current_app.logger.info(f"period: {period}")
+    current_app.logger.info(f"interval: {interval}")
+    current_app.logger.info(f"window_size: {window_size}")
 
     curr = yf.Ticker(curr_pairs[curr_pair.upper()])
     # This will be a configurable call in custom function
     df = curr.history(period=period, interval=interval, )
     df = df[["Open", "High", "Low", "Close"]]
-    # Data cleaning, not totally necessary.
-    df.index.rename('Time', inplace=True)
-    df.reset_index(inplace=True)
-    df['Time'] = df['Time'].dt.tz_localize(None)
-    df.set_index('Time', inplace=True)
 
-    logger.info("\nData start Time: %s", str(min(df.index)))
-    logger.info("\nData end Time: %s", str(max(df.index)))
+    if df.empty:
+        raise Exception('DataFrame is empty!\n'\
+                        'Try using a smaller period or a larger interval.')
+
+    # current_app.logger.info("\nData start Time: %s", str(min(df.index)))
+    # current_app.logger.info("\nData end Time: %s", str(max(df.index)))
 
     env = gym.make('forex-v0', df=df, window_size=window_size, frame_bound=(window_size, df.shape[0]), unit_side=unit_side)
+    max_possible_profit = env.max_possible_profit()
+
     env.reset()
     i = 0
     while True:
         action = env.action_space.sample()
         observation, reward, done, info = env.step(action)
         if i % window_size == 0:
-            logger.info("Model info at end of observation %s: %s", str(i), json.dumps(info))
+            current_app.logger.info("Model info at end of observation %s: %s", str(i), json.dumps(info))
         i += 1
         if done:
-            logger.info("Final model info: %s", json.dumps(info))
+            current_app.logger.info("Final model info: %s", json.dumps(info))
             break
 
     plt.cla()
     env.render_all()
-    plt.savefig("app/model_output/rl_model_output_{curr_pair}_{utc_datetime}.png".format(
-                curr_pair=curr_pair.split("/")[0] + "_" + curr_pair.split("/")[1],
-                utc_datetime=datetime.datetime.utcnow().strftime("%Y_%m_%d_%H_%M_%S")))
-    return info
+    plot_file_name = f"model_output/rl_model_output_{curr_pair.split('/')[0] + '_' + curr_pair.split('/')[1]}_{datetime.datetime.utcnow().strftime('%Y_%m_%d_%H_%M_%S')}.png"
+    plt.savefig(plot_file_name)
+    return info, plot_file_name
 
 
 @app.route('/')
@@ -138,29 +143,25 @@ def my_form_post():
     interval = request.form["interval"]
     window_size = request.form["window_size"]
 
-    return f"Running on {currency_pair}, over {period} of data in {interval} intervals with {window_size} window_size"
+    info, plot_filename = main(curr_pair=currency_pair, period=period, interval=interval, window_size=window_size)
 
+    total_reward = str(info['total_reward'])
+    total_profit = str(info['total_profit'])
+
+    return render_template('run_model.html',
+                           currency_pair=currency_pair,
+                           period=period,
+                           interval=interval,
+                           window_size=window_size,
+                           plot_filename=plot_filename,
+                           total_reward=total_reward,
+                           total_profit=total_profit
+                           )
 
 @app.route('/hello')
 def hello():
     return render_template('hello.html')
 
-
-@app.route('/name/<value>')
-def name(value):
-    val = {"value": value}
-    return jsonify(val)
-
-
-@app.route('/params', methods=['POST'])
-def run_model():
-    req_data = request.get_json()
-    return req_data
-
-@app.route('/dir')
-def dir():
-    files = os.listdir()
-    return jsonify(files)
 
 
 if __name__ == '__main__':
