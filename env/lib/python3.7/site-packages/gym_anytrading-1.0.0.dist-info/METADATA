@@ -1,0 +1,17 @@
+Metadata-Version: 2.1
+Name: gym-anytrading
+Version: 1.0.0
+Summary: UNKNOWN
+Home-page: UNKNOWN
+Author: AminHP
+Author-email: mdan.hagh@gmail.com
+License: UNKNOWN
+Platform: UNKNOWN
+Requires-Dist: gym (>=0.12.5)
+Requires-Dist: numpy (>=1.16.4)
+Requires-Dist: pandas (>=0.24.2)
+Requires-Dist: matplotlib (>=3.1.1)
+
+UNKNOWN
+
+

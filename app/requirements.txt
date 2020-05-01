@@ -3,5 +3,5 @@ sklearn
 numpy
 google-cloud-storage
 gym==0.17.0
-gym_anything=1.0.0
+gym-anytrading==1.0.0
 yfinance

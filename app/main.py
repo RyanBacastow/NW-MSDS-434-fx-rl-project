@@ -15,9 +15,7 @@
 # [START gae_python37_app]
 from flask import Flask, jsonify, request, render_template, url_for, current_app
 # from google.cloud import storage
-import pickle
 import os
-import numpy as np
 import yfinance as yf
 import datetime
 import logging
@@ -26,6 +24,8 @@ import json
 import gym
 import gym_anytrading
 from flask_logs import LogSetup
+import matplotlib
+matplotlib.use('Agg')
 
 app = Flask(__name__,
             static_folder='./static',
@@ -126,42 +126,49 @@ def main(curr_pair="EUR/USD", period="1y", interval="1h", window_size=1, unit_si
 
     plt.cla()
     env.render_all()
-    plot_file_name = f"model_output/rl_model_output_{curr_pair.split('/')[0] + '_' + curr_pair.split('/')[1]}_{datetime.datetime.utcnow().strftime('%Y_%m_%d_%H_%M_%S')}.png"
-    plt.savefig(plot_file_name)
+    # plot_file_name = f"rl_model_output_{curr_pair.split('/')[0] + '_' + curr_pair.split('/')[1]}_{datetime.datetime.utcnow().strftime('%Y_%m_%d_%H_%M_%S')}.png"
+    plot_file_name = f"model_output.png"
+    plt.savefig("static/" + plot_file_name)
+
+    logging
     return info, plot_file_name
 
 
-@app.route('/')
-def my_form():
-    return render_template('index.html')
+@app.route('/',  methods=['GET', 'POST'])
+def home():
+    if request.method == 'POST':
+        currency_pair = request.form["currency_pair"]
+        period = request.form["period"]
+        interval = request.form["interval"]
+        window_size = request.form["window_size"]
+
+        return run_model(currency_pair, period, interval, window_size)
+    else:
+        return render_template('index.html')
 
 
-@app.route('/', methods=['POST'])
-def my_form_post():
-    currency_pair = request.form["currency_pair"]
-    period = request.form["period"]
-    interval = request.form["interval"]
-    window_size = request.form["window_size"]
 
-    info, plot_filename = main(curr_pair=currency_pair, period=period, interval=interval, window_size=window_size)
 
-    total_reward = str(info['total_reward'])
-    total_profit = str(info['total_profit'])
+@app.route('/model', methods=['GET', 'POST'])
+def run_model(currency_pair, period, interval, window_size):
+    if request.method == 'POST':
+        info, plot_filename = main(curr_pair=currency_pair, period=period, interval=interval, window_size=window_size)
 
-    return render_template('run_model.html',
-                           currency_pair=currency_pair,
-                           period=period,
-                           interval=interval,
-                           window_size=window_size,
-                           plot_filename=plot_filename,
-                           total_reward=total_reward,
-                           total_profit=total_profit
-                           )
+        total_profit = str(info['total_profit'] * 100)
 
-@app.route('/hello')
-def hello():
-    return render_template('hello.html')
+        total_reward = str(info['total_reward'])
 
+        return render_template('model.html',
+                               currency_pair=currency_pair,
+                               period=period,
+                               interval=interval,
+                               window_size=window_size,
+                               plot_filename=plot_filename,
+                               total_reward=total_reward,
+                               total_profit=total_profit
+                               )
+    else:
+        return render_template('index.html')
 
 
 if __name__ == '__main__':

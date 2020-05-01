@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/html">
+  <head lang="en">
+    <meta charset="UTF-8">
+    <title>Forex Reinforcement Learning</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- styles -->
+</head>
+    <body>
+        <div class="container">
+            <h1>We ran your model!</h1>
+            <div id="content">
+                <h3>The results of the model can be found below:</h3>
+                <h4>Parameters:</h4>
+                <ul>
+                    <li>Currency Pair: {{ currency_pair }}</li>
+                    <li>Period: {{ period }}</li>
+                    <li>Interval: {{ interval }}</li>
+                    <li>Window Size: {{ window_size }}</li>
+                </ul>
+                <p><strong>Your Profit over the past {{ period }} was: {{ total_profit }}%</strong></p>
+                <p><strong>Your Model's Reward Total was: {{ total_reward }}</strong></p>
+                <br>
+                <p><strong>Your results visualized:</strong></p>
+{#                <img src= "/static/{{ plot_filename }}" alt="Model Output">#}
+                <img src="{{url_for('static', filename='model_output.png')}}" align="middle">
+                <form method="POST" action="">
+                <label>
+                    Would you like to deploy this model on the latest market data or try again (Yes for deploy, No to retune model hyperparameters.
+                    <input type="text" name="deploy">
+                </label>
+                <input type="submit" value="Submit">
+            </form>
+
+            </div>
+        </div>
+<!-- scripts -->
+    </body>
+</html>
