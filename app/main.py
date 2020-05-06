@@ -13,7 +13,8 @@
 # limitations under the License.
 
 # [START gae_python37_app]
-from flask import Flask, jsonify, request, render_template, url_for, current_app
+from flask import Flask, jsonify, request, render_template, current_app
+from flask_cors import CORS
 # from google.cloud import storage
 import os
 import yfinance as yf
@@ -26,6 +27,7 @@ import gym_anytrading
 from flask_logs import LogSetup
 import matplotlib
 matplotlib.use('Agg')
+import tempfile
 
 app = Flask(__name__,
             static_folder='./static',
@@ -90,12 +92,12 @@ def main(curr_pair="EUR/USD", period="1y", interval="1h", window_size=1, unit_si
     :param unit_side: str: which side of the pair should be the one denominating the results.
     :return: info: dict: dictionary with returns and model information.
     """
-
     window_size = int(window_size)
     current_app.logger.info(f"curr_pair: {curr_pair}")
     current_app.logger.info(f"period: {period}")
     current_app.logger.info(f"interval: {interval}")
     current_app.logger.info(f"window_size: {window_size}")
+    current_app.logger.info(f"unit_side: {unit_side}")
 
     curr = yf.Ticker(curr_pairs[curr_pair.upper()])
     # This will be a configurable call in custom function
@@ -110,7 +112,6 @@ def main(curr_pair="EUR/USD", period="1y", interval="1h", window_size=1, unit_si
     # current_app.logger.info("\nData end Time: %s", str(max(df.index)))
 
     env = gym.make('forex-v0', df=df, window_size=window_size, frame_bound=(window_size, df.shape[0]), unit_side=unit_side)
-    max_possible_profit = env.max_possible_profit()
 
     env.reset()
     i = 0
@@ -127,48 +128,50 @@ def main(curr_pair="EUR/USD", period="1y", interval="1h", window_size=1, unit_si
     plt.cla()
     env.render_all()
     # plot_file_name = f"rl_model_output_{curr_pair.split('/')[0] + '_' + curr_pair.split('/')[1]}_{datetime.datetime.utcnow().strftime('%Y_%m_%d_%H_%M_%S')}.png"
-    plot_file_name = f"model_output.png"
-    plt.savefig("static/" + plot_file_name)
-
-    logging
+    plot_file_name = f"static/model_output.png"
+    plt.savefig(plot_file_name)
+    current_app.logger.info(f"plot_file_name {plot_file_name}")
     return info, plot_file_name
 
 
 @app.route('/',  methods=['GET', 'POST'])
 def home():
     if request.method == 'POST':
-        currency_pair = request.form["currency_pair"]
-        period = request.form["period"]
-        interval = request.form["interval"]
+        currency_pair = request.form["currency_pair"].upper()
+        period = request.form["period"].lower()
+        interval = request.form["interval"].lower()
         window_size = request.form["window_size"]
+        unit_side = request.form["unit_side"].lower()
 
-        return run_model(currency_pair, period, interval, window_size)
-    else:
-        return render_template('index.html')
+        return run_model(currency_pair, period, interval, window_size, unit_side)
 
-
+    return render_template('index.html')
 
 
 @app.route('/model', methods=['GET', 'POST'])
-def run_model(currency_pair, period, interval, window_size):
-    if request.method == 'POST':
-        info, plot_filename = main(curr_pair=currency_pair, period=period, interval=interval, window_size=window_size)
+def run_model(currency_pair, period, interval, window_size, unit_side):
+    try:
+        if request.method == 'POST':
+            info, plot_filename = main(curr_pair=currency_pair, period=period, interval=interval, window_size=window_size, unit_side=unit_side)
 
-        total_profit = str(info['total_profit'] * 100)
+            total_profit = str(info['total_profit'] * 100)
 
-        total_reward = str(info['total_reward'])
+            total_reward = str(info['total_reward'])
 
-        return render_template('model.html',
-                               currency_pair=currency_pair,
-                               period=period,
-                               interval=interval,
-                               window_size=window_size,
-                               plot_filename=plot_filename,
-                               total_reward=total_reward,
-                               total_profit=total_profit
-                               )
-    else:
-        return render_template('index.html')
+            return render_template('model.html',
+                                   currency_pair=currency_pair,
+                                   period=period,
+                                   interval=interval,
+                                   window_size=window_size,
+                                   plot_filename=plot_filename,
+                                   total_reward=total_reward,
+                                   total_profit=total_profit
+                                   )
+        else:
+            return render_template('index.html')
+    except Exception as e:
+        return f"We ran into an issue implementng the model with your parameters. Please try different params and run again.\nError: {e}"
+
 
 
 if __name__ == '__main__':
@@ -176,4 +179,3 @@ if __name__ == '__main__':
     # Engine, a webserver process such as Gunicorn will serve the app. This
     # can be configured by adding an `entrypoint` to app.yaml.
     app.run(host='127.0.0.1', port=8080, debug=True)
-# [END gae_python37_app]

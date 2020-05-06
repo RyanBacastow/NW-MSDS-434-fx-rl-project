@@ -14,25 +14,33 @@
             <h3>Please give the model some parameters:</h3>
             <form method="POST" action="">
                 <label>
-                    currency pair:
+                    Which currency pair would you like to trade (EX: EUR/USD, GBP/USD, EUR/JPY):
                     <input type="text" name="currency_pair">
                 </label>
                 <br>
+                <br>
                 <label>
-                    period:
+                    How far back would you like to run the model on? (EX: 1d,7d,1mo,6mo,1y,5y,max):
                     <input type="text" name="period">
                 </label>
                 <br>
+                <br>
                 <label>
-                    interval:
+                    At what interval would you like the data over the period you chose? 1 minute level data only available for up to  7 days. (EX: 1m, 5m, 10m, 1h, 1d, 1mo):
                     <input type="text" name="interval">
                 </label>
                 <br>
+                <br>
                 <label>
-                    window size:
+                    How large of a bactch should be used for each decision? This value usually corresponds to your training window eg hourly data might use a window of 24 to train (EX: 5,10,24,30,60,100,200,300,etc)
                     <input type="text" name="window_size">
                 </label>
                 <br>
+                <br>
+                <label>
+                    Which side of the trading pair would you like to trade? Right or Left.
+                    <input type="text" name="unit_side">
+                </label>
                 <input type="submit" value="Submit">
             </form>
         </div>
