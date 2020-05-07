@@ -5,46 +5,82 @@
     <title>Forex Reinforcement Learning</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- styles -->
-</head>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
+    <link rel="stylesheet" type="../static/css" href="style.css">
+  </head>
+  <style>
+    .container {
+        text-align: center;
+        color: white;
+    }
+    body {
+        background-image: url("../static/forex-trading-background-2.jpg");
+    }
+  </style>
     <body>
-        <div class="container">
+        <div class="container" style="background-color:rgba(0, 0, 0, 0.7);">
+            <img alt="Forex Img" src="../static/forex-img.png">
             <h1>Welcome to Forex Reinforcement Learning</h1>
-            <h4>This project seeks to use openai gym and yfinance apis to create and tune a reinforcement learning forex trading bot.</h4>
+            <h4>This project uses the OpenAi Gym and yfinance APIs to help you create a reinforcement learning forex trading bot.</h4>
+            <br>
         <div id="content">
             <h3>Please give the model some parameters:</h3>
             <form method="POST" action="">
                 <label>
                     Which currency pair would you like to trade (EX: EUR/USD, GBP/USD, EUR/JPY):
-                    <input type="text" name="currency_pair">
+                    <input type="text" name="currency_pair" value="EUR/USD">
                 </label>
                 <br>
                 <br>
                 <label>
                     How far back would you like to run the model on? (EX: 1d,7d,1mo,6mo,1y,5y,max):
-                    <input type="text" name="period">
+                    <input type="text" name="period" value="1y">
                 </label>
                 <br>
                 <br>
                 <label>
-                    At what interval would you like the data over the period you chose? 1 minute level data only available for up to  7 days. (EX: 1m, 5m, 10m, 1h, 1d, 1mo):
-                    <input type="text" name="interval">
+                        At what interval would you like the data over the period you chose?
+                    <input type="text" name="interval" value="1h">
                 </label>
                 <br>
                 <br>
                 <label>
-                    How large of a bactch should be used for each decision? This value usually corresponds to your training window eg hourly data might use a window of 24 to train (EX: 5,10,24,30,60,100,200,300,etc)
-                    <input type="text" name="window_size">
+                    How large of a bactch should be used for each decision?
+                    <input type="text" name="window_size" value="10">
                 </label>
                 <br>
                 <br>
                 <label>
                     Which side of the trading pair would you like to trade? Right or Left.
-                    <input type="text" name="unit_side">
+                    <input type="text" name="unit_side" value="Right">
                 </label>
-                <input type="submit" value="Submit">
+                <br>
+                <input type="submit" value="Submit Parameters">
             </form>
         </div>
         </div>
 <!-- scripts -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js" integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js" integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k" crossorigin="anonymous"></script>
     </body>
 </html>
+
+
+{#<!-- Add "scoped" attribute to limit CSS to this component only -->#}
+{#<style scoped>#}
+{#h3 {#}
+{#  margin: 40px 0 0;#}
+{#}#}
+{#ul {#}
+{#  list-style-type: none;#}
+{#  padding: 0;#}
+{#}#}
+{#li {#}
+{#  display: inline-block;#}
+{#  margin: 0 10px;#}
+{#}#}
+{#a {#}
+{#  color: #42b983;#}
+{#}#}
+{#</style>#}

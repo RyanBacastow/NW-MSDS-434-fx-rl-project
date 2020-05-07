@@ -21,7 +21,8 @@
     <body>
         <div class="container" style="background-color:rgba(0, 0, 0, 0.7);">
         <img alt="Forex Img" src="../static/forex-img.png">
-        <h1>We ran your model!</h1>
+        <h1>We ran into an issue implementng the model with your parameters.</h1>
+        <p><strong>ERROR:</strong> {{ error }} </p>
         <div id="content">
             <h4>Parameters:</h4>
 
@@ -29,18 +30,11 @@
             <p>Period: {{ period }}</p>
             <p>Interval: {{ interval }}</p>
             <p>Window Size: {{ window_size }}</p>
+
             <form method="GET" action="">
                 <input type="submit" value="Return to Parameters">
             </form>
-            <br>
-            <br>
 
-            <h4>Your percent return over the past {{ period }} was: {{ total_profit }}%</h4>
-            <h4>Your Model's Reward Total was: {{ total_reward }}</h4>
-            <br>
-
-            <p><strong>Your results visualized:</strong></p>
-            <img src="static/model_output.png" align="middle"\>
             </div>
         </div>
 <!-- scripts -->

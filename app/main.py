@@ -14,7 +14,6 @@
 
 # [START gae_python37_app]
 from flask import Flask, jsonify, request, render_template, current_app
-from flask_cors import CORS
 # from google.cloud import storage
 import os
 import yfinance as yf
@@ -24,10 +23,14 @@ import matplotlib.pyplot as plt
 import json
 import gym
 import gym_anytrading
+from TradingEnvEdit import TradingEnv as te_edit
+from gym_anytrading.envs.trading_env import TradingEnv
+TradingEnv = te_edit
 from flask_logs import LogSetup
 import matplotlib
 matplotlib.use('Agg')
-import tempfile
+plt.rcParams['axes.facecolor']='black'
+plt.rcParams['savefig.facecolor']='black'
 
 app = Flask(__name__,
             static_folder='./static',
@@ -92,6 +95,8 @@ def main(curr_pair="EUR/USD", period="1y", interval="1h", window_size=1, unit_si
     :param unit_side: str: which side of the pair should be the one denominating the results.
     :return: info: dict: dictionary with returns and model information.
     """
+
+    current_app.logger.info(TradingEnv.test_works)
     window_size = int(window_size)
     current_app.logger.info(f"curr_pair: {curr_pair}")
     current_app.logger.info(f"period: {period}")
@@ -113,14 +118,15 @@ def main(curr_pair="EUR/USD", period="1y", interval="1h", window_size=1, unit_si
 
     env = gym.make('forex-v0', df=df, window_size=window_size, frame_bound=(window_size, df.shape[0]), unit_side=unit_side)
 
+    env
     env.reset()
     i = 0
     while True:
         action = env.action_space.sample()
         observation, reward, done, info = env.step(action)
-        if i % window_size == 0:
-            current_app.logger.info("Model info at end of observation %s: %s", str(i), json.dumps(info))
-        i += 1
+        # if i % window_size == 0:
+        #     current_app.logger.info("Model info at end of observation %s: %s", str(i), json.dumps(info))
+        # i += 1
         if done:
             current_app.logger.info("Final model info: %s", json.dumps(info))
             break
@@ -129,6 +135,7 @@ def main(curr_pair="EUR/USD", period="1y", interval="1h", window_size=1, unit_si
     env.render_all()
     # plot_file_name = f"rl_model_output_{curr_pair.split('/')[0] + '_' + curr_pair.split('/')[1]}_{datetime.datetime.utcnow().strftime('%Y_%m_%d_%H_%M_%S')}.png"
     plot_file_name = f"static/model_output.png"
+
     plt.savefig(plot_file_name)
     current_app.logger.info(f"plot_file_name {plot_file_name}")
     return info, plot_file_name
@@ -154,9 +161,9 @@ def run_model(currency_pair, period, interval, window_size, unit_side):
         if request.method == 'POST':
             info, plot_filename = main(curr_pair=currency_pair, period=period, interval=interval, window_size=window_size, unit_side=unit_side)
 
-            total_profit = str(info['total_profit'] * 100)
+            total_profit = str(info['total_profit'].round(2))
 
-            total_reward = str(info['total_reward'])
+            total_reward = str(info['total_reward'].round(2))
 
             return render_template('model.html',
                                    currency_pair=currency_pair,
@@ -170,7 +177,13 @@ def run_model(currency_pair, period, interval, window_size, unit_side):
         else:
             return render_template('index.html')
     except Exception as e:
-        return f"We ran into an issue implementng the model with your parameters. Please try different params and run again.\nError: {e}"
+        return render_template('error.html',
+                               error=e,
+                               currency_pair=currency_pair,
+                               period=period,
+                               interval=interval,
+                               window_size=window_size
+                               )
 
 
 
