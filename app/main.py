@@ -29,8 +29,6 @@ TradingEnv = te_edit
 from flask_logs import LogSetup
 import matplotlib
 matplotlib.use('Agg')
-plt.rcParams['axes.facecolor']='black'
-plt.rcParams['savefig.facecolor']='black'
 
 app = Flask(__name__,
             static_folder='./static',
@@ -113,20 +111,16 @@ def main(curr_pair="EUR/USD", period="1y", interval="1h", window_size=1, unit_si
         raise Exception('DataFrame is empty!\n'\
                         'Try using a smaller period or a larger interval.')
 
-    # current_app.logger.info("\nData start Time: %s", str(min(df.index)))
-    # current_app.logger.info("\nData end Time: %s", str(max(df.index)))
+    current_app.logger.info("Data start Time: %s", str(min(df.index)))
+    current_app.logger.info("Data end Time: %s", str(max(df.index)))
 
-    env = gym.make('forex-v0', df=df, window_size=window_size, frame_bound=(window_size, df.shape[0]), unit_side=unit_side)
+    current_app.logger.info(f"frame_bound: ({int(df.shape[0] * .3)}, {int(df.shape[0] * .7)})")
 
-    env
+    env = gym.make('forex-v0', df=df, window_size=window_size, frame_bound=(int(df.shape[0] * .3), int(df.shape[0] * .7)), unit_side=unit_side)
     env.reset()
-    i = 0
     while True:
         action = env.action_space.sample()
         observation, reward, done, info = env.step(action)
-        # if i % window_size == 0:
-        #     current_app.logger.info("Model info at end of observation %s: %s", str(i), json.dumps(info))
-        # i += 1
         if done:
             current_app.logger.info("Final model info: %s", json.dumps(info))
             break
@@ -135,7 +129,7 @@ def main(curr_pair="EUR/USD", period="1y", interval="1h", window_size=1, unit_si
     env.render_all()
     # plot_file_name = f"rl_model_output_{curr_pair.split('/')[0] + '_' + curr_pair.split('/')[1]}_{datetime.datetime.utcnow().strftime('%Y_%m_%d_%H_%M_%S')}.png"
     plot_file_name = f"static/model_output.png"
-
+    os.remove(plot_file_name)
     plt.savefig(plot_file_name)
     current_app.logger.info(f"plot_file_name {plot_file_name}")
     return info, plot_file_name
@@ -184,7 +178,6 @@ def run_model(currency_pair, period, interval, window_size, unit_side):
                                interval=interval,
                                window_size=window_size
                                )
-
 
 
 if __name__ == '__main__':
