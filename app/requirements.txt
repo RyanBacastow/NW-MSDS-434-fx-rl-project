@@ -4,6 +4,8 @@ sklearn
 numpy
 google-cloud-storage
 gym==0.17.0
-gym-anytrading==1.0.0
+git+https://github.com/AminHP/gym-anytrading@master#gym-anytrading
 yfinance
 jinja2
+wheel
+pandas
