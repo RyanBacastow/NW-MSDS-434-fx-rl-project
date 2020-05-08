@@ -127,9 +127,11 @@ def main(curr_pair="EUR/USD", period="1y", interval="1h", window_size=1, unit_si
 
     plt.cla()
     env.render_all()
-    # plot_file_name = f"rl_model_output_{curr_pair.split('/')[0] + '_' + curr_pair.split('/')[1]}_{datetime.datetime.utcnow().strftime('%Y_%m_%d_%H_%M_%S')}.png"
-    plot_file_name = f"static/model_output.png"
-    os.remove(plot_file_name)
+    if os.environ.get("LOCAL"):
+        plot_file_name = "static/model_output.png"
+    else:
+        plot_file_name = "/tmp/model_output.png"
+
     plt.savefig(plot_file_name)
     current_app.logger.info(f"plot_file_name {plot_file_name}")
     return info, plot_file_name
@@ -166,7 +168,8 @@ def run_model(currency_pair, period, interval, window_size, unit_side):
                                    window_size=window_size,
                                    plot_filename=plot_filename,
                                    total_reward=total_reward,
-                                   total_profit=total_profit
+                                   total_profit=total_profit,
+                                   unit_side=unit_side
                                    )
         else:
             return render_template('index.html')
