@@ -76,7 +76,6 @@ def main(curr_pair="EUR/USD", period="1y", interval="1h", window_size=1, unit_si
 
     logger.info("\nData start Time: %s", str(min(df.index)))
     logger.info("\nData end Time: %s", str(max(df.index)))
-
     env = gym.make('forex-v0', df=df, window_size=window_size, frame_bound=(window_size, df.shape[0]), unit_side=unit_side)
     env.reset()
     i = 0
