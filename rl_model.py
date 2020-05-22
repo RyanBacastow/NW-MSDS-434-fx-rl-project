@@ -92,9 +92,7 @@ def main(curr_pair="EUR/USD", period="1y", interval="1h", window_size=1, unit_si
 
     plt.cla()
     env.render_all()
-    plt.savefig("app/model_output/rl_model_output_{curr_pair}_{utc_datetime}.png".format(
-                curr_pair=curr_pair.split("/")[0] + "_" + curr_pair.split("/")[1],
-                utc_datetime=datetime.datetime.utcnow().strftime("%Y_%m_%d_%H_%M_%S")))
+
     return info
 
 
