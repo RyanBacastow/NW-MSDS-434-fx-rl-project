@@ -9,5 +9,5 @@ yfinance
 jinja2
 wheel
 pandas
-matplotli
+matplotlib
 pylint
