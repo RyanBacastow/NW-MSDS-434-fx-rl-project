@@ -13,21 +13,15 @@
 # limitations under the License.
 
 # [START gae_python37_app]
-from flask import Flask, jsonify, request, render_template, current_app
-# from google.cloud import storage
 import os
-import yfinance as yf
-import datetime
-import logging
-import matplotlib.pyplot as plt
 import json
+import matplotlib
+import matplotlib.pyplot as plt
+from flask import Flask, request, render_template, current_app
+from flask_logs import LogSetup
+import yfinance as yf
 import gym
 import gym_anytrading
-from TradingEnvEdit import TradingEnv as te_edit
-from gym_anytrading.envs.trading_env import TradingEnv
-TradingEnv = te_edit
-from flask_logs import LogSetup
-import matplotlib
 matplotlib.use('Agg')
 
 app = Flask(__name__,
@@ -45,32 +39,31 @@ logs.init_app(app)
 
 
 curr_pairs = {
-"EUR/USD":"EURUSD=X",
-"USD/JPY":"JPY=X",
-"GBP/USD":"GBPUSD=X",
-"AUD/USD":"AUDUSD=X",
-"NZD/USD":"NZDUSD=X",
-"GBP/JPY":"GBPJPY=X",
-"EUR/GBP":"EURGBP=X",
-"EUR/CAD":"EURCAD=X",
-"EUR/SEK":"EURSEK=X",
-"EUR/CHF":"EURCHF=X",
-"EUR/HUF":"EURHUF=X",
-"EUR/JPY":"EURJPY=X",
-"USD/CNY":"CNY=X",
-"USD/HKD":"HKD=X",
-"USD/SGD":"SGD=X",
-"USD/INR":"INR=X",
-"USD/MXN":"MXN=X",
-"USD/PHP":"PHP=X",
-"USD/IDR":"IDR=X",
-"USD/THB":"THB=X",
-"USD/MYR":"MYR=X",
-"USD/ZAR":"ZAR=X",
-"USD/RUB":"RUB=X"
-}
+        "EUR/USD": "EURUSD=X",
+        "USD/JPY": "JPY=X",
+        "GBP/USD": "GBPUSD=X",
+        "AUD/USD": "AUDUSD=X",
+        "NZD/USD": "NZDUSD=X",
+        "GBP/JPY": "GBPJPY=X",
+        "EUR/GBP": "EURGBP=X",
+        "EUR/CAD": "EURCAD=X",
+        "EUR/SEK": "EURSEK=X",
+        "EUR/CHF": "EURCHF=X",
+        "EUR/HUF": "EURHUF=X",
+        "EUR/JPY": "EURJPY=X",
+        "USD/CNY": "CNY=X",
+        "USD/HKD": "HKD=X",
+        "USD/SGD": "SGD=X",
+        "USD/INR": "INR=X",
+        "USD/MXN": "MXN=X",
+        "USD/PHP": "PHP=X",
+        "USD/IDR": "IDR=X",
+        "USD/THB": "THB=X",
+        "USD/MYR": "MYR=X",
+        "USD/ZAR": "ZAR=X",
+        "USD/RUB": "RUB=X"}
 
-#Periods are key = time that will go into yfinance call, value = amount of that will be set as default window_size
+# Periods are key = time that will go into yfinance call, value = amount of that will be set as default window_size
 periods = ["1d",
            "5d",
            "1mo",
@@ -84,17 +77,16 @@ periods = ["1d",
            "max"
            ]
 
+
 def main(curr_pair="EUR/USD", period="1y", interval="1h", window_size=1, unit_side='left'):
     """
-    :param curr_pair: str: Choose from the list of valid trading pairs seen in curr_pairs dict object. Not case sensitive.
+    :param curr_pair: str: Choose from the list of valid trading pairs seen in curr_pairs dict object.
     :param period: str: Valid period strings user can choose from are in the period object.
     :param interval: str: Valid pairing of interval given period. Max period for 1 minute interval is 7d.
     :param window_size: str: amount of data that should be considered for making decisions.
     :param unit_side: str: which side of the pair should be the one denominating the results.
     :return: info: dict: dictionary with returns and model information.
     """
-
-    current_app.logger.info(TradingEnv.test_works)
     window_size = int(window_size)
     current_app.logger.info(f"curr_pair: {curr_pair}")
     current_app.logger.info(f"period: {period}")
@@ -108,15 +100,21 @@ def main(curr_pair="EUR/USD", period="1y", interval="1h", window_size=1, unit_si
     df = df[["Open", "High", "Low", "Close"]]
 
     if df.empty:
-        raise Exception('DataFrame is empty!\n'\
-                        'Try using a smaller period or a larger interval.')
+        raise Exception('DataFrame is empty!\nTry using a smaller period or a larger interval.')
 
     current_app.logger.info("Data start Time: %s", str(min(df.index)))
     current_app.logger.info("Data end Time: %s", str(max(df.index)))
 
     current_app.logger.info(f"frame_bound: ({int(df.shape[0] * .3)}, {int(df.shape[0] * .7)})")
 
-    env = gym.make('forex-v0', df=df, window_size=window_size, frame_bound=(int(df.shape[0] * .3), int(df.shape[0] * .7)), unit_side=unit_side)
+    env = gym.make('forex-v0',
+                   df=df,
+                   window_size=window_size,
+                   frame_bound=(int(df.shape[0] * .3),
+                                int(df.shape[0] * .7)),
+                   unit_side=unit_side
+                   )
+
     env.reset()
     while True:
         action = env.action_space.sample()
@@ -137,8 +135,12 @@ def main(curr_pair="EUR/USD", period="1y", interval="1h", window_size=1, unit_si
     return info, plot_file_name
 
 
-@app.route('/',  methods=['GET', 'POST'])
+@app.route('/', methods=['GET', 'POST'])
 def home():
+    """
+    return to home index page to submit params.
+    :return:
+    """
     if request.method == 'POST':
         currency_pair = request.form["currency_pair"].upper()
         period = request.form["period"].lower()
@@ -153,9 +155,20 @@ def home():
 
 @app.route('/model', methods=['GET', 'POST'])
 def run_model(currency_pair, period, interval, window_size, unit_side):
+    """
+    :param currency_pair: str: Choose from the list of valid trading pairs seen in curr_pairs dict object.
+    :param period: str: Valid period strings user can choose from are in the period object.
+    :param interval: str: Valid pairing of interval given period. Max period for 1 minute interval is 7d.
+    :param window_size: str: amount of data that should be considered for making decisions.
+    :param unit_side: str: which side of the pair should be the one denominating the results.
+    :return: renders the model template flask object
+    """
     try:
         if request.method == 'POST':
-            info, plot_filename = main(curr_pair=currency_pair, period=period, interval=interval, window_size=window_size, unit_side=unit_side)
+            info, plot_filename = main(curr_pair=currency_pair,
+                                       period=period, interval=interval,
+                                       window_size=window_size,
+                                       unit_side=unit_side)
 
             total_profit = str(info['total_profit'].round(2))
 
