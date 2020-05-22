@@ -1,4 +1,4 @@
-from app import rl_model
+import rl_model
 
 
 def test_func():
