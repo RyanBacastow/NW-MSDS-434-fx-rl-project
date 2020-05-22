@@ -4,7 +4,7 @@ setup:
 install:
 	(\
 	. ~/.fx_rl_repo/bin/activate; \
-	pip install --upgrade -q pip && pip install -r requirements.txt -q --progress-bar off; \
+	pip install --upgrade -q pip && pip install -r app/requirements.txt -q --progress-bar off; \
 	)
 
 lint:

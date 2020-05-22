@@ -1,13 +1,1 @@
-Flask==1.1.2
-Flask-Cors
-sklearn
-numpy
-google-cloud-storage
-gym==0.17.0
-git+https://github.com/AminHP/gym-anytrading@master#gym-anytrading
-yfinance
-jinja2
-wheel
-pandas
 pylint
-matplotlib
