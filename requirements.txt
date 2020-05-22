@@ -9,3 +9,4 @@ yfinance
 jinja2
 wheel
 pandas
+pylint
