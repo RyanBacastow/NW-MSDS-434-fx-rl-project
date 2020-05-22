@@ -16,6 +16,7 @@ lint:
 test:
 	(\
 	. ~/.fx_rl_repo/bin/activate; \
+	pip install pytest; \
 	python -m pytest -vv --cov=app tests/*.py; \
 	)
 
