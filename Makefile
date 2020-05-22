@@ -19,4 +19,4 @@ test:
 	python -m pytest -vv --cov=app tests/*.py; \
 	)
 
-all: setup install lint test
+all: setup install test
