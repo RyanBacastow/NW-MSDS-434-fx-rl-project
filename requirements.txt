@@ -11,3 +11,4 @@ wheel
 pandas
 matplotlib
 pylint
+pytest
